@@ -14,7 +14,7 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_USER:root
+          POSTGRES_USER: root
           POSTGRES_PASSWORD: secret
           POSTGRES_DB: simple_bank
         options: >-
@@ -32,6 +32,6 @@ jobs:
 
     - name: run migration
       run: make migrateup
-      
+
     - name: Test
       run: make test
