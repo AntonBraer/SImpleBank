@@ -21,33 +21,33 @@ import (
 func TestListAccountAPI(t *testing.T) {
 	n := 5
 
-	accounts := make([]db.Account,n)
-	for i:=0; i<n;i++{
+	accounts := make([]db.Account, n)
+	for i := 0; i < n; i++ {
 		accounts[i] = generateRandomAccount()
 	}
-	type Query struct{
-		PageID int
-		PageSize int 
+	type Query struct {
+		PageID   int
+		PageSize int
 	}
 
-	testCases := []struct{
-		name string
-		query Query
+	testCases := []struct {
+		name          string
+		query         Query
 		buildStabs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			query: Query{
-				PageID: 1,
+				PageID:   1,
 				PageSize: n,
 			},
 			buildStabs: func(store *mockdb.MockStore) {
 				arg := db.ListAccountsParams{
-					Limit: int32(n),
+					Limit:  int32(n),
 					Offset: 0,
 				}
-				store.EXPECT().ListAccounts(gomock.Any(),gomock.Eq(arg)).Times(1).Return(accounts, nil)
+				store.EXPECT().ListAccounts(gomock.Any(), gomock.Eq(arg)).Times(1).Return(accounts, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -57,11 +57,11 @@ func TestListAccountAPI(t *testing.T) {
 		{
 			name: "Bad pageID",
 			query: Query{
-				PageID: 0,
+				PageID:   0,
 				PageSize: n,
 			},
 			buildStabs: func(store *mockdb.MockStore) {
-				store.EXPECT().ListAccounts(gomock.Any(),gomock.Any()).Times(0)
+				store.EXPECT().ListAccounts(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -70,11 +70,11 @@ func TestListAccountAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			query: Query{
-				PageID: 1,
+				PageID:   1,
 				PageSize: n,
 			},
 			buildStabs: func(store *mockdb.MockStore) {
-				store.EXPECT().ListAccounts(gomock.Any(),gomock.Any()).Times(1).Return([]db.Account{}, sql.ErrConnDone)
+				store.EXPECT().ListAccounts(gomock.Any(), gomock.Any()).Times(1).Return([]db.Account{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -87,7 +87,7 @@ func TestListAccountAPI(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			
+
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStabs(store)
 
@@ -107,28 +107,28 @@ func TestListAccountAPI(t *testing.T) {
 			tc.checkResponse(t, recorder)
 		})
 	}
-	
+
 }
 
 func TestCreateAccountAPI(t *testing.T) {
 	account := generateRandomAccount()
 
-	testCases := []struct{
-		name string
-		body gin.H
+	testCases := []struct {
+		name          string
+		body          gin.H
 		buildStabs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			body: gin.H{
-				"Owner": account.Owner,
+				"Owner":    account.Owner,
 				"Currency": account.Currency,
 			},
 			buildStabs: func(store *mockdb.MockStore) {
 				arg := db.CreateAccountParams{
-					Owner: account.Owner,
-					Balance: 0,
+					Owner:    account.Owner,
+					Balance:  0,
 					Currency: account.Currency,
 				}
 				store.EXPECT().CreateAccount(gomock.Any(), gomock.Eq(arg)).Times(1).Return(account, nil)
@@ -141,7 +141,7 @@ func TestCreateAccountAPI(t *testing.T) {
 		{
 			name: "BadBody",
 			body: gin.H{
-				"Ownerr": account.Owner,
+				"Ownerr":   account.Owner,
 				"Currency": account.Currency,
 			},
 			buildStabs: func(store *mockdb.MockStore) {
@@ -154,7 +154,7 @@ func TestCreateAccountAPI(t *testing.T) {
 		{
 			name: "InternalServerError",
 			body: gin.H{
-				"Owner": account.Owner,
+				"Owner":    account.Owner,
 				"Currency": account.Currency,
 			},
 			buildStabs: func(store *mockdb.MockStore) {
@@ -171,19 +171,19 @@ func TestCreateAccountAPI(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-	
+
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStabs(store)
-	
+
 			server := NewServer(store)
 			recorder := httptest.NewRecorder()
-	
+
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 			url := "/accounts"
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
-	
+
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
