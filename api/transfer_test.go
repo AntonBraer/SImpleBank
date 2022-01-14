@@ -24,9 +24,9 @@ func TestCreateTransferAPI(t *testing.T) {
 	amount := int64(10)
 	transfer := generateRandomTransfer(account1.ID, account2.ID, amount)
 
-	testCases := []struct{
-		name string
-		body gin.H
+	testCases := []struct {
+		name          string
+		body          gin.H
 		buildStabs    func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
@@ -35,10 +35,10 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amount":        transfer.Amount,
-				"currency":      account1.Currency,
+				"amount":          transfer.Amount,
+				"currency":        account1.Currency,
 			},
-			buildStabs: func(store *mockdb.MockStore){
+			buildStabs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(account1, nil)
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(1).Return(account2, nil)
 
@@ -49,7 +49,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				}
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Eq(arg)).Times(1)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
@@ -58,13 +58,13 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amountt":        transfer.Amount, //double t
-				"currency":      account1.Currency,
+				"amountt":         transfer.Amount, //double t
+				"currency":        account1.Currency,
 			},
-			buildStabs: func(store *mockdb.MockStore){
-				
+			buildStabs: func(store *mockdb.MockStore) {
+
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
@@ -73,10 +73,10 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amount":        transfer.Amount,
-				"currency":      account1.Currency,
+				"amount":          transfer.Amount,
+				"currency":        account1.Currency,
 			},
-			buildStabs: func(store *mockdb.MockStore){
+			buildStabs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(account1, nil)
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(1).Return(account2, nil)
 
@@ -87,7 +87,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				}
 				store.EXPECT().TransferTx(gomock.Any(), gomock.Eq(arg)).Times(1).Return(db.TransferTxResult{}, sql.ErrConnDone)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
@@ -96,13 +96,13 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amount":        transfer.Amount,
-				"currency":      account1.Currency,
+				"amount":          transfer.Amount,
+				"currency":        account1.Currency,
 			},
-			buildStabs: func(store *mockdb.MockStore){
+			buildStabs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(db.Account{}, sql.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
@@ -111,14 +111,14 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amount":        transfer.Amount,
-				"currency":      account1.Currency,
+				"amount":          transfer.Amount,
+				"currency":        account1.Currency,
 			},
-			buildStabs: func(store *mockdb.MockStore){
+			buildStabs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(account1, nil)
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(1).Return(db.Account{}, sql.ErrNoRows)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
@@ -127,13 +127,13 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amount":        transfer.Amount,
-				"currency":      account1.Currency,
+				"amount":          transfer.Amount,
+				"currency":        account1.Currency,
 			},
-			buildStabs: func(store *mockdb.MockStore){
+			buildStabs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(db.Account{}, sql.ErrConnDone)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
@@ -142,13 +142,13 @@ func TestCreateTransferAPI(t *testing.T) {
 			body: gin.H{
 				"from_account_id": transfer.FromAccountID,
 				"to_account_id":   transfer.ToAccountID,
-				"amount":        transfer.Amount,
-				"currency":      util.EUR,
+				"amount":          transfer.Amount,
+				"currency":        util.EUR,
 			},
-			buildStabs: func(store *mockdb.MockStore){
+			buildStabs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(account1, nil)
 			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder){
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
