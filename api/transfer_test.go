@@ -163,7 +163,7 @@ func TestCreateTransferAPI(t *testing.T) {
 
 			tc.buildStabs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 			body, err := json.Marshal(tc.body)
 			require.NoError(t, err)
