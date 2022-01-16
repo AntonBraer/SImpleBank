@@ -1,0 +1,30 @@
+version: "3.3"
+services:
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=simple_bank
+    network_mode: host
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_SOURCE=postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    network_mode: host
+    depends_on:
+      - postgres
+    entrypoint:
+      [
+        "/app/wait-for.sh",
+        "localhost:5432",
+        "--",
+        "/app/start.sh"
+      ]
+    command: [ "/app/main" ]
