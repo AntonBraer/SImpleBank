@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 type Server struct {
@@ -42,6 +44,8 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 func (server *Server) createRoutes() {
 	router := gin.Default()
 
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
 
@@ -59,6 +63,15 @@ func (server *Server) Start(addres string) error {
 	return server.router.Run(addres)
 }
 
-func errorResponse(err error) gin.H {
-	return gin.H{"error": err.Error()}
+type errorResponse struct{
+	Code int `json:"code"`
+	Message string `json:"error"`
+}
+
+func NewError(ctx *gin.Context, status int, err error) {
+	er := errorResponse{
+		Code: status,
+		Message: err.Error(),
+	}
+	ctx.JSON(status, er)
 }

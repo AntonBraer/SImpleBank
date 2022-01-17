@@ -8,7 +8,19 @@ import (
 	"simplebank/util"
 
 	_ "github.com/lib/pq"
+	_ "simplebank/docs"
 )
+
+// @title        Simple Bank API
+// @version      1.0
+// @description  This is a simple bank API.
+
+// @host      localhost:8080
+// @BasePath  /
+
+// @securitydefinitions.apikey  ApiKeyAuth
+// @in                          header
+// @name                        Authorization
 
 func main() {
 	config, err := util.LoadConfig(".")

@@ -18,10 +18,23 @@ type TransferRequest struct {
 	Currency      string `json:"currency" binding:"required,currency"`
 }
 
+// @Summary      CreateTransfer
+// @Security     ApiKeyAuth
+// @Tags         Transfer
+// @ID           create-transfer
+// @Description  Create new transfer
+// @Accept       json
+// @Produce      json
+// @Param        input  body      TransferRequest  true  "Transfer info"
+// @Success      200    {object}  db.TransferTxResult
+// @Failure      400    {object}  errorResponse
+// @Failure      401    {object}  errorResponse
+// @Failure      500    {object}  errorResponse
+// @Router       /transfers [post]
 func (server *Server) createTransfer(ctx *gin.Context) {
 	var req TransferRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		NewError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -34,7 +47,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authPayloadKey).(*token.Payload)
 	if authPayload.Username != fromAccount.Owner {
 		err := errors.New("account doesn't belong to the authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		NewError(ctx, http.StatusUnauthorized, err)
 		return
 	}
 
@@ -51,7 +64,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 
 	result, err := server.store.TransferTx(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -62,15 +75,15 @@ func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency s
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			NewError(ctx, http.StatusNotFound, err)
 			return account, false
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		NewError(ctx, http.StatusInternalServerError, err)
 		return account, false
 	}
 	if account.Currency != currency {
 		err := fmt.Errorf("account [%d] currency mistmatch: %s vs %s", accountID, currency, account.Currency)
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		NewError(ctx, http.StatusBadRequest, err)
 		return account, false
 	}
 

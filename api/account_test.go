@@ -328,7 +328,7 @@ func TestGetAccountAPI(t *testing.T) {
 				addAuthHeader(t, request, tokenMaker, authTypeBearer, user.Username, -time.Minute)
 			},
 			buildStabs: func(store *mockdb.MockStore) {
-				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(0)
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(1)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)

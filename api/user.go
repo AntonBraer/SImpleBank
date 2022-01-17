@@ -36,16 +36,27 @@ func newUserResponse(user db.User) UserResponse {
 	}
 }
 
+// @Summary      CreateUser
+// @Tags         Users
+// @ID           create-user
+// @Description  Create new user
+// @Accept       json
+// @Produce      json
+// @Param        input  body      createUsertRequest  true  "user info"
+// @Success      200    {object}  db.User
+// @Failure      400    {object}  errorResponse
+// @Failure      403    {object}  errorResponse
+// @Failure      500    {object}  errorResponse
+// @Router       /users [post]
 func (server *Server) createUser(ctx *gin.Context) {
 	var req createUsertRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		NewError(ctx, http.StatusBadRequest, err)
 		return
 	}
-
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -61,11 +72,11 @@ func (server *Server) createUser(ctx *gin.Context) {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
 			case "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				NewError(ctx, http.StatusForbidden, err)
 				return
 			}
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -84,32 +95,45 @@ type loginUserResponse struct {
 	User        UserResponse `json:"user"`
 }
 
+// @Summary      LoginUser
+// @Tags         Users
+// @ID           login-user
+// @Description  Login User
+// @Accept       json
+// @Produce      json
+// @Param        input  body      loginUsertRequest  true  "login info"
+// @Success      200    {object}  loginUserResponse
+// @Failure      400    {object}  errorResponse
+// @Failure      401    {object}  errorResponse
+// @Failure      404    {object}  errorResponse
+// @Failure      500    {object}  errorResponse
+// @Router       /users/login [post]
 func (server *Server) loginUser(ctx *gin.Context) {
 	var req loginUsertRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		NewError(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	user, err := server.store.GetUser(ctx, req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			NewError(ctx, http.StatusNotFound, err)
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
 	err = util.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		NewError(ctx, http.StatusUnauthorized, err)
 		return
 	}
 
 	accessToken, err := server.tokenMaker.CreateToken(user.Username, server.config.AccessTokenDuration)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		NewError(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
